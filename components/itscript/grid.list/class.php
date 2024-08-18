@@ -8,12 +8,22 @@ use Bitrix\Iblock\PropertyTable;
 
 class GridList extends CBitrixComponent
 {
-
-	const GRID_ID = 'TEST_LIST';
+    const GRID_ID = 'itscript_grid_id';
 
 	public static array $fields = [];
 
 	public static array $properties = [];
+
+    public function onPrepareComponentParams($arParams)
+    {
+        $result = [
+            "CACHE_TYPE" => $arParams["CACHE_TYPE"],
+            "CACHE_TIME" => isset($arParams["CACHE_TIME"])? $arParams["CACHE_TIME"]: 36000000,
+        ];
+
+        // используем параметры комплексного компонента
+        return array_merge($result, $this->__parent->arParams);
+    }
 
 	public function executeComponent(): void
 	{
@@ -21,10 +31,11 @@ class GridList extends CBitrixComponent
 		$properties = $this->arParams['LIST_PROPERTY_CODE'];
 
 		self::$fields = array_filter($fields, fn($value) => $value !== '');
-		if (!array_key_exists('ID', self::$fields))
-		{
+
+		if (!array_key_exists('ID', self::$fields)) {
 			self::$fields[] = 'ID';
 		}
+
 		self::$properties = array_filter($properties, fn($value) => $value !== '');
 
 		$fieldsAndProperties = array_merge(self::$fields, self::$properties);
@@ -44,7 +55,7 @@ class GridList extends CBitrixComponent
 
 		$companies = self::getCompanies($params);
 
-		$rows = self::getRows($companies, $this->arParams, $fieldsAndProperties);
+		$rows = self::getRows($companies, $fieldsAndProperties);
 
 		$this->arResult = [
 			'COMPANIES' => $companies,
@@ -74,12 +85,11 @@ class GridList extends CBitrixComponent
 
 		foreach ($result as $key => $item)
 		{
-			foreach (self::$fields as $field)
-			{
+			foreach (self::$fields as $field) {
 				$arCompanies[$key][$field] = $item[$field];
 			}
-			foreach (self::$properties as $property)
-			{
+
+			foreach (self::$properties as $property) {
 				$arCompanies[$key][$property] = $item[$property . '_VALUE'];
 			}
 		}
@@ -87,14 +97,18 @@ class GridList extends CBitrixComponent
 		return $arCompanies;
 	}
 
-	private static function getRows(array $companies, array $arParams, array $fieldsAndProperties): array
+	private function getRows(array $companies, array $fieldsAndProperties): array
 	{
 		$rows = [];
 
 		foreach ($companies as $key => $company) {
+            // Формируем ссылку на детальную страницу
+            $template = ($this->arParams['SEF_MODE']=='Y')?
+                $this->arParams['SEF_URL_TEMPLATES']['detail'] : $this->arParams['SEF_FOLDER'] . '?ID=#ID#';
+
 			$viewUrl = CComponentEngine::makePathFromTemplate(
-				$arParams['URL_TEMPLATES']['DETAIL'],
-				['COMPANY_ID' => $company['ID']]
+                $template,
+				['ID' => $company['ID']]
 			);
 
 			$rows[] = [
@@ -118,21 +132,20 @@ class GridList extends CBitrixComponent
 
 	private static function prepareProperties(array $props): array
 	{
-		if (empty($props))
-			return $props;
+		if (empty($props)) {
+            return $props;
+        }
 
 		$result = [];
 
-		foreach ($props as $key => $value)
-		{
-			if (in_array($key, self::$properties))
-			{
+		foreach ($props as $key => $value) {
+			if (in_array($key, self::$properties)) {
 				$result[$key . '_VALUE'] = $value;
-			} else
-			{
+			} else {
 				$result[$key] = $value;
 			}
 		}
+
 		return $result;
 	}
 
@@ -140,8 +153,7 @@ class GridList extends CBitrixComponent
 	{
 		$result = [];
 
-		foreach (self::$properties as $property)
-		{
+		foreach (self::$properties as $property) {
 			$result[$property . '_VALUE'] = $property . '.VALUE';
 		}
 
@@ -197,9 +209,7 @@ class GridList extends CBitrixComponent
 	{
 		$headers = [];
 
-
-		foreach ($names as $field => $name)
-		{
+		foreach ($names as $field => $name) {
 			$headers[] = [
 				'id' => $field,
 				'name' => $name,
@@ -216,10 +226,8 @@ class GridList extends CBitrixComponent
 	{
 		$filterFields = [];
 
-		foreach ($fieldsAndProperties as $field)
-		{
-			if (!empty($field))
-			{
+		foreach ($fieldsAndProperties as $field) {
+			if (!empty($field)) {
 				$filterFields[] = [
 					'id' => $field,
 					'name' => $names[$field],
@@ -236,24 +244,26 @@ class GridList extends CBitrixComponent
 	private static function getFieldNames(): array
 	{
 		$names = [];
-		foreach (self::$fields as $field)
-		{
+
+		foreach (self::$fields as $field) {
 			$names[$field] = Loc::getMessage('IBLOCK_FIELD_' . $field);
 		}
+
 		return $names;
 	}
 	private static function getPropertiesNames(): array
 	{
 		$names = [];
+
 		$result = PropertyTable::query()
 			->setSelect(['NAME', 'CODE'])
 			->setFilter(['CODE' => self::$properties ])
 			->exec();
 
-		foreach ($result as $item)
-		{
+		foreach ($result as $item) {
 			$names[$item['CODE']] = $item['NAME'];
 		}
+
 		return $names;
 	}
 
@@ -261,6 +271,7 @@ class GridList extends CBitrixComponent
 	{
 		$fieldNames = self::getFieldNames();
 		$propertiesNames = self::getPropertiesNames();
+
 		return array_merge($fieldNames, $propertiesNames);
 	}
 }

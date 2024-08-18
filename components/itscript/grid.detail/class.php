@@ -47,7 +47,7 @@ class GridDetail extends CBitrixComponent
 		));
 	}
 
-	private static function prepareSelectParams($fields, $properties): array
+	private static function prepareSelectParams(array $fields, $properties): array
 	{
 		$result = [];
 

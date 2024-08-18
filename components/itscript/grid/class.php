@@ -6,7 +6,7 @@ class CmpGridComplex extends CBitrixComponent
     protected array $arUrlTemplates  = [];
     protected array $arDefaultVariableAliases  = [];
     protected array $arComponentVariables = ['CODE', 'ID'];
-    protected array $arDefaultUrlTemplates404 = [
+    public array $arDefaultUrlTemplates404 = [
         "detail" => "#ID#/",
     ];
 
@@ -17,9 +17,9 @@ class CmpGridComplex extends CBitrixComponent
 			"CACHE_TIME" => isset($arParams["CACHE_TIME"])? $arParams["CACHE_TIME"]: 36000000,
         ];
 
-        $result = $result+$arParams;
+        $this->arParams = array_merge($result, $arParams);
 
-		return $result;
+		return $this->arParams;
 	}
 
     public function getTemplateNameDefault()
@@ -35,16 +35,19 @@ class CmpGridComplex extends CBitrixComponent
     {
         try {
 
+            /*debug([
+                $this->arParams['SEF_MODE'],
+                $this->arDefaultUrlTemplates404,
+                $arParams['SEF_URL_TEMPLATES']
+            ]);*/
+
             if ($this->arParams['SEF_MODE'] == 'Y') {
                 if (!is_array($this->arParams['SEF_URL_TEMPLATES'])) {
                     $this->arParams['SEF_URL_TEMPLATES'] = [];
                 }
-        
-                debug($this->arParams['SEF_MODE']);
 
-            
                 $this->arUrlTemplates = CComponentEngine::MakeComponentUrlTemplates(
-                    $this->arResultarDefaultUrlTemplates404, 
+                    $this->arDefaultUrlTemplates404,
                     $arParams['SEF_URL_TEMPLATES']
                 );
 
@@ -63,36 +66,36 @@ class CmpGridComplex extends CBitrixComponent
                 $this->arResult = [
                     'SEF_FOLDER' => $this->arParams['SEF_FOLDER'],
                     'URL_TEMPLATES' => [
-                        'DETAIL' => $this->arParams['SEF_FOLDER'] . $sefTemplates['detail']
+                        'DETAIL' => $this->arParams['SEF_FOLDER'] . $this->arDefaultUrlTemplates404['detail']
                     ]
                 ];
 
-                debug($arVariables);
-
-                debug($view);
-
             } else {
-                $arVariableAliases = CComponentEngine::MakeComponentVariableAliases(
-                    $arDefaultVariableAliases,
+                $this->arVariableAliases = CComponentEngine::MakeComponentVariableAliases(
+                    $this->arDefaultVariableAliases,
                     $this->arParams['VARIABLE_ALIASES']
                 );
                 
                 CComponentEngine::InitComponentVariables(
                     false,
-                    $arComponentVariables,
-                    $arVariableAliases,
-                    $arVariables
+                    $this->arComponentVariables,
+                    $this->arVariableAliases,
+                    $this->arVariables
                 );
 
-                $view = (intval($arVariables['COMPANY_ID']) > 0)? 'detail' : 'list';
-
+                $view = (intval($this->arVariables['ID']) > 0)? 'detail' : 'list';
             }
+
+            //debug([$view => $this->arVariables]);
 
             // Include template
             $this->includeComponentTemplate($view);
             
         } catch (\Throwable $e) {
-            print $e->getMessage();
+            echo '<pre>';
+            echo "<strong>{$e->getMessage()}</strong><br/><br/>";
+            var_dump($e->getTraceAsString());
+            echo '<pre>';
         }
 	}
 }
