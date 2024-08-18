@@ -117,11 +117,26 @@ class GridList extends CBitrixComponent
 			];
 
 			foreach ($fieldsAndProperties as $column) {
-				if ($column === 'NAME') {
-					$value = '<a href="' . htmlspecialcharsEx($viewUrl) . '" target="_self">' . $company['NAME'] . '</a>';
-				} else {
-					$value = $company[$column];
-				}
+                switch ($column) {
+                    case 'NAME': {
+                        $value = '<a href="' . htmlspecialcharsEx(
+                                $viewUrl
+                            ) . '" target="_self">' . $company['NAME'] . '</a>';
+
+                        break;
+                    }
+                    case 'DESCRIPTION': {
+                        $value = null;
+                        if (!empty($company['DESCRIPTION'])) {
+                            $value = unserialize($company['DESCRIPTION'])['TEXT'] ?: null;
+                        }
+
+                        break;
+                    }
+                    default: {
+                        $value = $company[$column];
+                    }
+                }
 				
 				$rows[$key]['columns'][$column] = $value;
 			}
