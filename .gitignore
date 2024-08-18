@@ -1,0 +1,7 @@
+.vscode
+.idea
+*.zip
+*.tar
+*.tar.gz
+/import_csv
+
