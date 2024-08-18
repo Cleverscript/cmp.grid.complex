@@ -6,6 +6,17 @@ use Bitrix\Iblock\Iblock;
 
 class GridDetail extends CBitrixComponent
 {
+    public function onPrepareComponentParams($arParams)
+    {
+        $result = [
+            "CACHE_TYPE" => $arParams["CACHE_TYPE"],
+            "CACHE_TIME" => isset($arParams["CACHE_TIME"])? $arParams["CACHE_TIME"]: 36000000,
+        ];
+
+        // используем параметры комплексного компонента
+        return array_merge($result, $this->__parent->arParams);
+    }
+
 	public function executeComponent()
 	{
 		if ($this->startResultCache()) {
