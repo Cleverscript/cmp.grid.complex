@@ -104,7 +104,7 @@ class GridList extends CBitrixComponent
 		foreach ($companies as $key => $company) {
             // Формируем ссылку на детальную страницу
             $template = ($this->arParams['SEF_MODE']=='Y')?
-                $this->arParams['SEF_URL_TEMPLATES']['detail'] : $this->arParams['SEF_FOLDER'] . '?ID=#ID#';
+                $this->arParams['SEF_FOLDER'] . '' . $this->arParams['SEF_URL_TEMPLATES']['detail'] : $this->arParams['SEF_FOLDER'] . '?ID=#ID#';
 
 			$viewUrl = CComponentEngine::makePathFromTemplate(
                 $template,
